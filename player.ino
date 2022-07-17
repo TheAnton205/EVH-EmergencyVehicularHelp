@@ -85,53 +85,59 @@ void setup()
  *
  * Send new frames to decode in a loop until file ends
  */
-void loop()
-{
-  puts("loop!!");
-
-  /* Send new frames to decode in a loop until file ends */
-  int err = theAudio->writeFrames(AudioClass::Player0, myFile);
-
-  /*  Tell when player file ends */
-  if (err == AUDIOLIB_ECODE_FILEEND)
-    {
-      printf("Main player File End!\n");
-    }
-
-  /* Show error code from player and stop */
-  if (err)
-    {
-      printf("Main player error code: %d\n", err);
-      goto stop_player;
-    }
-
-  if (ErrEnd)
-    {
-      printf("Error End\n");
-      goto stop_player;
-    }
-
-  /* This sleep is adjusted by the time to read the audio stream file.
-   * Please adjust in according with the processing contents
-   * being processed at the same time by Application.
-   *
-   * The usleep() function suspends execution of the calling thread for usec
-   * microseconds. But the timer resolution depends on the OS system tick time
-   * which is 10 milliseconds (10,000 microseconds) by default. Therefore,
-   * it will sleep for a longer time than the time requested here.
-   */
-
-  usleep(100);
-  //delay(1000);
-
-
-  /* Don't go further and continue play */
-  return;
-
-stop_player:
+void endAudio() {
   theAudio->stopPlayer(AudioClass::Player0);
   myFile.close();
   theAudio->setReadyMode();
   theAudio->end();
   exit(1);
+}
+void play() { 
+  while(1) {
+    int err = theAudio->writeFrames(AudioClass::Player0, myFile);
+    if (err == AUDIOLIB_ECODE_FILEEND)
+      {
+        printf("Main player File End!\n");
+      }
+  
+    /* Show error code from player and stop */
+    if (err)
+      {
+        printf("Main player error code: %d\n", err);
+        return;
+        //stop();
+      }
+  
+    if (ErrEnd)
+      {
+        printf("Error End\n");
+        return;
+        //stop();
+      }
+  }
+}
+void loop()
+{
+  play();
+  
+  Serial.println("Playing!");
+  delay(5000);
+  
+  myFile.close();
+  myFile = theSD.open("ask_help.mp3");
+  
+  Serial.println("Restarting in 3, ");
+  delay(1000);
+  Serial.println("2, ");
+  delay(1000);
+  Serial.println("1, ");
+  
+  play();
+  delay(5000);
+  endAudio();
+  Serial.println("Ended!");
+  
+
+  return;
+
 }
